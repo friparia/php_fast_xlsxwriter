@@ -27,7 +27,7 @@ a php extension to write an array to excel(.xlsx file) fast
   $b = [
       ['a', 'b'], ['a1', 'b1']
   ];
-  xlsx_write($b, $path)
+  xlsx_write($b, $path);
   ```
 ## xlsx_write_by_sheet
   ```php
@@ -35,7 +35,7 @@ a php extension to write an array to excel(.xlsx file) fast
       'sheet1' => [
           ['a', 'b'], ['a1', 'b1']
       ],
-  ]
-  xlsx_write_by_sheet($b, $path)
+  ];
+  xlsx_write_by_sheet($b, $path);
   ```
 
