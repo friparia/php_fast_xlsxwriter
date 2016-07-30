@@ -16,7 +16,7 @@ a php extension to write an array to excel(.xlsx file) fast
  ./configure --with-xlsxwriter --with-libxlsxwriter=/path/to/libxlsxwriter
  make && make install
  ```
- Then, add `extension=xlsxwriter.so' in your `php.ini` file
+ Then, add `extension=xlsxwriter.so` in your `php.ini` file
  
 # Usage
 ## xlsx_write
