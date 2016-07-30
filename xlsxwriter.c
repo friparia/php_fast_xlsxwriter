@@ -139,10 +139,14 @@ PHP_MINFO_FUNCTION(xlsxwriter)
 
 PHP_FUNCTION(xlsx_write)
 {
+#if PHP_MAJOR_VERSION >= 7
+	zval *arr, *sub_arr, *data, *sub_data;
+#else
 	zval *arr, *sub_arr, **data, **sub_data;
+	HashPosition pointer, sub_pointer;
+#endif
 	HashTable *arr_hash;
 	HashTable *sub_arr_hash;
-	HashPosition pointer, sub_pointer;
 	char *filename;
 	int filename_length;
 
@@ -156,6 +160,30 @@ PHP_FUNCTION(xlsx_write)
 
 	int row = 0;
 	int col = 0;
+
+#if PHP_MAJOR_VERSION >= 7
+	ZEND_HASH_FOREACH_VAL(arr_hash, data){
+		if(Z_TYPE_P(data) == IS_ARRAY){
+			sub_arr = data;
+			sub_arr_hash = Z_ARRVAL_P(sub_arr);
+			col = 0;
+			ZEND_HASH_FOREACH_VAL(sub_arr_hash, sub_data){
+				if(Z_TYPE_P(sub_data) != IS_ARRAY){
+					convert_to_string(sub_data);
+					worksheet_write_string(worksheet, row, col, Z_STRVAL_P(sub_data), NULL);
+					col++;
+				}
+			}ZEND_HASH_FOREACH_END();
+			row++;
+		}else{
+			if(Z_TYPE_P(data) != IS_ARRAY){
+				convert_to_string(data);
+				worksheet_write_string(worksheet, row, col, Z_STRVAL_P(data), NULL);
+				col++;
+			}
+		}
+	}ZEND_HASH_FOREACH_END();
+#else
 	for(zend_hash_internal_pointer_reset_ex(arr_hash, &pointer); zend_hash_get_current_data_ex(arr_hash, (void**) &data, &pointer) == SUCCESS; zend_hash_move_forward_ex(arr_hash, &pointer)){
 		if(Z_TYPE_PP(data) == IS_ARRAY){
 			sub_arr = *data;
@@ -177,17 +205,22 @@ PHP_FUNCTION(xlsx_write)
 			}
 		}
 	}
+#endif
 	workbook_close(workbook);
 	RETURN_TRUE
 }
 
 PHP_FUNCTION(xlsx_write_by_sheet)
 {
-	zval *main_arr, *arr, *sub_arr, **main_data, **data, **sub_data;
 	HashTable *main_arr_hash;
 	HashTable *arr_hash;
 	HashTable *sub_arr_hash;
+#if PHP_MAJOR_VERSION >= 7
+	zval *main_arr, *arr, *sub_arr, *main_data, *data, *sub_data;
+#else
+	zval *main_arr, *arr, *sub_arr, **main_data, **data, **sub_data;
 	HashPosition main_pointer, pointer, sub_pointer;
+#endif
 	char *filename;
 	int filename_length;
 
@@ -200,10 +233,47 @@ PHP_FUNCTION(xlsx_write_by_sheet)
 
 	int row; 
 	int col;
-	char *key;
 	int key_len;
-	long index;
 	main_arr_hash = Z_ARRVAL_P(main_arr);
+#if PHP_MAJOR_VERSION >= 7
+	ulong num_key;
+	zend_string *key;
+	ZEND_HASH_FOREACH_KEY_VAL(main_arr_hash, num_key, key, main_data){
+		if (key) {
+			worksheet = workbook_add_worksheet(workbook, key->val);
+		}else{
+			worksheet = workbook_add_worksheet(workbook, NULL);
+		}
+		arr = main_data;
+		arr_hash = Z_ARRVAL_P(arr);
+		row = 0;
+		col = 0;
+		ZEND_HASH_FOREACH_VAL(arr_hash, data){
+			if(Z_TYPE_P(data) == IS_ARRAY){
+				sub_arr = data;
+				sub_arr_hash = Z_ARRVAL_P(sub_arr);
+				col = 0;
+				ZEND_HASH_FOREACH_VAL(sub_arr_hash, sub_data){
+					if(Z_TYPE_P(sub_data) != IS_ARRAY){
+						convert_to_string(sub_data);
+						worksheet_write_string(worksheet, row, col, Z_STRVAL_P(sub_data), NULL);
+						col++;
+					}
+				} ZEND_HASH_FOREACH_END();
+				row++;
+			}else{
+				if(Z_TYPE_P(data) != IS_ARRAY){
+					convert_to_string(data);
+					worksheet_write_string(worksheet, row, col, Z_STRVAL_P(data), NULL);
+					col++;
+				}
+			}
+		} ZEND_HASH_FOREACH_END();
+	} ZEND_HASH_FOREACH_END();
+	zend_string_release(key);
+#else
+	long index;
+	char *key;
 	for(zend_hash_internal_pointer_reset_ex(main_arr_hash, &main_pointer); zend_hash_get_current_data_ex(main_arr_hash, (void**) &main_data, &main_pointer) == SUCCESS; zend_hash_move_forward_ex(main_arr_hash, &main_pointer)){
 		if(zend_hash_get_current_key_ex(main_arr_hash, &key, &key_len, &index, 0, &main_pointer) == HASH_KEY_IS_STRING){
 			worksheet = workbook_add_worksheet(workbook, key);
@@ -237,28 +307,12 @@ PHP_FUNCTION(xlsx_write_by_sheet)
 			}
 		}
 	}
+#endif
 
 	workbook_close(workbook);
 	RETURN_TRUE
 }
 
-/* Every user-visible function in PHP should document itself in the source */
-/* {{{ proto string confirm_xlsxwriter_compiled(string arg)
-   Return a string to confirm that the module is compiled in */
-PHP_FUNCTION(confirm_xlsxwriter_compiled)
-{
-	char *arg = NULL;
-	int arg_len, len;
-	char *strg;
-
-	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &arg, &arg_len) == FAILURE) {
-		return;
-	}
-
-	len = spprintf(&strg, 0, "Congratulations! You have successfully modified ext/%.78s/config.m4. Module %.78s is now compiled into PHP.", "xlsxwriter", arg);
-	RETURN_STRINGL(strg, len, 0);
-}
-/* }}} */
 /* The previous line is meant for vim and emacs, so it can correctly fold and 
    unfold functions in source code. See the corresponding marks just before 
    function definition, where the functions purpose is also documented. Please 
