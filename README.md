@@ -19,18 +19,22 @@ a php extension to write an array to excel(.xlsx file) fast
  Then, add `extension=xlsxwriter.so' in your `php.ini` file
  
 # Usage
-  ## xlsx_write
+## xlsx_write
   ```php
   $a = ['a', 'b'];
   $path = '~/test.xlsx';
   xlsx_write($a, $path);
-  $b = [['a', 'b'], ['a1', 'b1']];
+  $b = [
+      ['a', 'b'], ['a1', 'b1']
+  ];
   xlsx_write($b, $path)
   ```
-  ## xlsx_write_by_sheet
+## xlsx_write_by_sheet
   ```php
   $c = [
-  'sheet1' => [['a', 'b'], ['a1', 'b1']],
+      'sheet1' => [
+          ['a', 'b'], ['a1', 'b1']
+      ],
   ]
   xlsx_write_by_sheet($b, $path)
   ```
