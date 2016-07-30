@@ -32,5 +32,6 @@ a php extension to write an array to excel(.xlsx file) fast
   $c = [
   'sheet1' => [['a', 'b'], ['a1', 'b1']],
   ]
-  ```
   xlsx_write_by_sheet($b, $path)
+  ```
+
