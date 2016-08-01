@@ -33,7 +33,6 @@ ZEND_DECLARE_MODULE_GLOBALS(xlsxwriter)
 */
 
 /* True global resources - no need for thread safety here */
-static int le_xlsxwriter;
 
 /* {{{ xlsxwriter_functions[]
  *
@@ -44,7 +43,6 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO(arginfo_xlsx_write_by_sheet, 0)
 ZEND_END_ARG_INFO()
 const zend_function_entry xlsxwriter_functions[] = {
-	PHP_FE(confirm_xlsxwriter_compiled,	NULL)		/* For testing, remove later. */
 	PHP_FE(xlsx_write, arginfo_xlsx_write)
 	PHP_FE(xlsx_write_by_sheet, arginfo_xlsx_write_by_sheet)
 	PHP_FE_END	/* Must be the last line in xlsxwriter_functions[] */
@@ -233,11 +231,10 @@ PHP_FUNCTION(xlsx_write_by_sheet)
 
 	int row; 
 	int col;
-	int key_len;
 	main_arr_hash = Z_ARRVAL_P(main_arr);
 #if PHP_MAJOR_VERSION >= 7
 	ulong num_key;
-	zend_string *key;
+	zend_string *key = NULL;
 	ZEND_HASH_FOREACH_KEY_VAL(main_arr_hash, num_key, key, main_data){
 		if (key) {
 			worksheet = workbook_add_worksheet(workbook, key->val);
@@ -274,6 +271,7 @@ PHP_FUNCTION(xlsx_write_by_sheet)
 #else
 	long index;
 	char *key;
+	int key_len;
 	for(zend_hash_internal_pointer_reset_ex(main_arr_hash, &main_pointer); zend_hash_get_current_data_ex(main_arr_hash, (void**) &main_data, &main_pointer) == SUCCESS; zend_hash_move_forward_ex(main_arr_hash, &main_pointer)){
 		if(zend_hash_get_current_key_ex(main_arr_hash, &key, &key_len, &index, 0, &main_pointer) == HASH_KEY_IS_STRING){
 			worksheet = workbook_add_worksheet(workbook, key);
